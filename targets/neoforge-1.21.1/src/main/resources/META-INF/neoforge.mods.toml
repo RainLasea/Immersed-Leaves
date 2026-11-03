@@ -1,0 +1,37 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="All Rights Reserved"
+[[mods]]
+modId="immersedleaves"
+version="${mod_version}"
+displayName="Immersed Leaves"
+authors="AbyssLasea"
+description="Wind-driven leaf texture animation with independent block phases."
+
+[[dependencies.immersedleaves]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.immersedleaves]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraft_version}]"
+ordering="NONE"
+side="BOTH"
+[[dependencies.immersedleaves]]
+modId="livingwind"
+type="optional"
+versionRange="[1.3.2]"
+ordering="AFTER"
+side="CLIENT"
+[[dependencies.immersedleaves]]
+modId="mc2_interactivefoliage"
+type="optional"
+versionRange="[2.2.0]"
+ordering="NONE"
+side="CLIENT"
+
+[[mixins]]
+config="immersedleaves.mixins.json"

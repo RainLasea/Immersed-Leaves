@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.abysslasea.immersedleaves.mixin",
+  "plugin": "dev.abysslasea.immersedleaves.mixin.LeavesMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "LeafTextureAnimationMixin",
+    "LeafTextureRenderMixin",
+    "LeafSpriteLoaderMixin",
+    "LeafBlockModelMixin",
+    "InteractiveFoliageLeavesMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

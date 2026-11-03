@@ -1,0 +1,34 @@
+plugins {
+    id 'java-library'
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+version = mod_version
+group = mod_group_id
+base { archivesName = "ImmersedLeaves-Fabric-${minecraft_version}" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+java.withSourcesJar()
+sourceSets.main {
+    java.srcDirs '../../shared/common/java', '../../shared/fabric/java'
+    resources.srcDir '../../shared/common/resources'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def metadata = [mod_version: project.version, minecraft_version: minecraft_version,
+                java_version: java_version, loader_version: loader_version]
+processResources {
+    inputs.properties metadata
+    filesMatching('fabric.mod.json') { expand metadata }
+}
+jar { from('../../LICENSE.txt') }
+
+tasks.register('release', Copy) {
+    dependsOn 'remapJar'
+    from tasks.named('remapJar').flatMap { it.archiveFile }
+    into layout.projectDirectory.dir('../../dist')
+}

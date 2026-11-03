@@ -1,0 +1,54 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.147'
+}
+version = mod_version
+group = mod_group_id
+base { archivesName = "ImmersedLeaves-NeoForge-${minecraft_version}" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+java.withSourcesJar()
+sourceSets.main {
+    java.srcDirs '../../shared/common/java', '../../shared/neoforge/java', '../../shared/livingwind/java'
+    resources.srcDir '../../shared/common/resources'
+}
+
+neoForge {
+    enable {
+        version = project.neo_version
+        disableRecompilation = true
+    }
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+    }
+    mods { immersedleaves { sourceSet(sourceSets.main) } }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+configurations {
+    localRuntime {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    runtimeClasspath.extendsFrom localRuntime
+}
+dependencies {
+    if (providers.gradleProperty('livingWindJar').isPresent()) {
+        def localJar = file(providers.gradleProperty('livingWindJar').get())
+        if (!localJar.isFile()) throw new GradleException("Living Wind JAR does not exist: ${localJar}")
+        localRuntime files(localJar)
+    }
+}
+def metadata = [mod_version: project.version, minecraft_version: minecraft_version,
+                java_version: java_version, neo_version: neo_version]
+processResources {
+    inputs.properties metadata
+    filesMatching('META-INF/neoforge.mods.toml') { expand metadata }
+}
+jar { from('../../LICENSE.txt') }
+
+tasks.register('release', Copy) {
+    dependsOn 'jar'
+    from tasks.named('jar').flatMap { it.archiveFile }
+    into layout.projectDirectory.dir('../../dist')
+}

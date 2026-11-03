@@ -1,0 +1,14 @@
+.gradle/
+scripts/
+.local/
+build/
+dist/
+
+*run/
+*.vscode/
+*gradle/
+
+icon.aseprite
+icon.gif
+
+*run-compat.log

@@ -1,0 +1,67 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.147'
+}
+version = mod_version
+group = mod_group_id
+base { archivesName = "ImmersedLeaves-Forge-${minecraft_version}" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+java.withSourcesJar()
+sourceSets.main {
+    java.srcDirs '../../shared/common/java', '../../shared/forge/java', '../../shared/livingwind/java'
+    resources.srcDir '../../shared/common/resources'
+}
+
+legacyForge {
+    enable {
+        forgeVersion = "${minecraft_version}-${forge_version}"
+        disableRecompilation = true
+    }
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+    }
+    mods { immersedleaves { sourceSet(sourceSets.main) } }
+}
+
+dependencies { annotationProcessor 'org.spongepowered:mixin:0.8.5:processor' }
+configurations {
+    localRuntime {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    runtimeClasspath.extendsFrom localRuntime
+}
+if (providers.gradleProperty('livingWindJar').isPresent()) {
+    def localJar = file(providers.gradleProperty('livingWindJar').get())
+    if (!localJar.isFile()) throw new GradleException("Living Wind JAR does not exist: ${localJar}")
+    // MDG 2.0.147 cannot remap file dependencies through modLocalRuntime.
+    def remapLivingWind = tasks.register('remapLivingWind', net.neoforged.moddevgradle.legacyforge.tasks.RemapJar) {
+        input = layout.file(providers.provider { localJar })
+        destinationDirectory = layout.buildDirectory.dir('optional-mods')
+        archiveFileName = localJar.name
+        libraries.from(sourceSets.main.compileClasspath)
+        obfuscation.configureSrgToNamedOperation(remapOperation)
+    }
+    dependencies { localRuntime files(remapLivingWind.flatMap { it.archiveFile }) }
+}
+mixin {
+    add sourceSets.main, 'immersedleaves.refmap.json'
+    config 'immersedleaves.mixins.json'
+}
+jar { manifest.attributes('MixinConfigs': 'immersedleaves.mixins.json') }
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def metadata = [mod_version: project.version, minecraft_version: minecraft_version,
+                java_version: java_version, forge_version: forge_version]
+processResources {
+    inputs.properties metadata
+    filesMatching('META-INF/mods.toml') { expand metadata }
+}
+jar { from('../../LICENSE.txt') }
+
+tasks.register('release', Copy) {
+    dependsOn 'reobfJar'
+    from tasks.named('reobfJar').flatMap { it.archiveFile }
+    into layout.projectDirectory.dir('../../dist')
+}
